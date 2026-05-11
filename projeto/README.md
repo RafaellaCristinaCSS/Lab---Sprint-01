@@ -56,9 +56,21 @@ npm install
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5432/home_service_db
+DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
 NODE_ENV=development
 ```
+
+Se voce ja tiver um PostgreSQL local em execucao na porta `5432`, use a configuracao acima para conectar no banco do Docker pela porta `5433` e evitar conflito.
+
+Se quiser rodar sem Docker, ajuste o `DATABASE_URL` para o seu PostgreSQL local, por exemplo:
+
+```env
+PORT=3000
+DATABASE_URL=postgresql://SEU_USUARIO:SUA_SENHA@localhost:5432/home_service_db
+NODE_ENV=development
+```
+
+Antes da migration, garanta que o banco `home_service_db` exista na sua instalacao local do PostgreSQL.
 
 3. Rode migrations:
 
