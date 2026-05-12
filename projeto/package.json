@@ -7,8 +7,7 @@
         "start": "node dist/app.js",
         "dev": "ts-node src/app.ts",
         "build": "tsc",
-        "test": "jest",
-        "seed": "ts-node src/database/seed.ts"
+        "test": "jest"
     },
     "keywords": [
         "REST",

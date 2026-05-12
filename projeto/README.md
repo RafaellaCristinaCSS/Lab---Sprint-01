@@ -101,17 +101,13 @@ Esse critério é atendido por:
 - `validations` para validação de payload
 - uso de TypeScript para tipagem e organização estrutural do código
 
-Embora o projeto esteja estruturado como arquitetura em camadas, ele também incorpora boas práticas normalmente esperadas em avaliações acadêmicas de backend, como modularização, separação de responsabilidades e documentação complementar.
+### 5. Documentação e validação dos endpoints
 
-### 5. Documentação dos endpoints (coleção de testes)
-
-Os endpoints estão documentados tanto no README quanto em documentação complementar, permitindo validação manual e apresentação prática do sistema.
+Os endpoints estão documentados no README e no guia de execução do projeto, permitindo validação manual e apresentação prática do sistema.
 
 Esse critério é atendido por:
 
 - listagem dos endpoints principais neste README
-- documentação detalhada em `docs/API_ENDPOINTS.md`
-- coleção Postman em `postman/home-service-api.postman_collection.json`
 - guia de execução e testes manuais em `COMO_RODAR.md`
 
 Com isso, o projeto oferece uma base suficiente para demonstração, validação funcional e apresentação acadêmica da API.
@@ -150,13 +146,7 @@ Antes da migration, garanta que o banco `home_service_db` exista na sua instalac
 npx prisma migrate dev
 ```
 
-4. Opcional: popular dados iniciais:
-
-```bash
-npm run seed
-```
-
-5. Inicie a API:
+4. Inicie a API:
 
 ```bash
 npm run dev

@@ -85,19 +85,7 @@ Se esse passo falhar, a API nao vai funcionar corretamente.
 
 ## 4. Popular dados iniciais
 
-Para inserir dados de exemplo:
-
-```powershell
-npm run seed
-```
-
-Esse seed cria:
-
-1. categorias de servico
-2. um cliente
-3. um prestador
-4. uma solicitacao concluida
-5. uma avaliacao
+Se voce quiser cadastrar dados para demonstracao, utilize os endpoints da API no Postman ou no Insomnia depois que a aplicacao estiver rodando.
 
 ## 5. Subir a API
 
@@ -129,13 +117,13 @@ Voce deve receber um JSON com `status: healthy`.
 
 ### Teste 2: listar usuarios
 
-Se voce rodou o seed, teste:
+Se voce ja cadastrou usuarios no banco, teste:
 
 ```text
 GET http://localhost:3000/api/users
 ```
 
-Voce deve receber pelo menos os usuarios de exemplo inseridos no seed.
+Voce deve receber os usuarios cadastrados no sistema.
 
 ### Teste 3: listar categorias
 
@@ -151,7 +139,7 @@ Voce deve receber categorias como Encanamento, Eletricidade e Limpeza.
 GET http://localhost:3000/api/requests
 ```
 
-Se o seed rodou corretamente, deve existir ao menos uma solicitacao.
+Se ja existir alguma solicitacao cadastrada, ela sera listada nesse endpoint.
 
 ### Teste 5: cadastrar solicitacao
 
@@ -201,12 +189,11 @@ Se voce for apresentar sem Docker, a ordem mais segura e:
 
 1. confirmar o `.env` com seu PostgreSQL local
 2. rodar `npx prisma migrate dev --name init`
-3. rodar `npm run seed`
-4. rodar `npm run dev`
-5. abrir `GET /api/health`
-6. mostrar `GET /api/users`
-7. mostrar `GET /api/categories`
-8. mostrar `POST /api/requests`
+3. rodar `npm run dev`
+4. abrir `GET /api/health`
+5. mostrar `GET /api/users`
+6. mostrar `GET /api/categories`
+7. mostrar `POST /api/requests`
 
 ## Troubleshooting
 
