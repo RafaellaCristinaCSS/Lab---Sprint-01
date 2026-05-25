@@ -1,238 +1,184 @@
-﻿# Home Service API
+﻿# Home Service API - Sprint 2 (Eventos Assincronos)
 
-Backend REST desenvolvido para a Sprint 1 da disciplina de Laboratório.
+Backend REST de marketplace de servicos residenciais com arquitetura orientada a eventos usando RabbitMQ.
 
-## Visão geral
+## Objetivo da sprint
 
-O projeto simula uma plataforma de serviços residenciais. O objetivo é conectar:
-- clientes que precisam de um serviço
-- prestadores que executam esse serviço
+Implementar comunicacao assincrona real para o fluxo de criacao de solicitacao de servico:
 
-A API cobre o fluxo principal: cadastro de usuários, abertura de solicitação, atribuição de prestador, conclusão e avaliação.
+1. Cliente chama endpoint HTTP
+2. API valida e salva no PostgreSQL
+3. API publica evento no RabbitMQ
+4. Worker consumidor processa evento de forma desacoplada
 
-## Tecnologias
+## Stack
 
 - Node.js
-- Express
 - TypeScript
+- Express
 - Prisma ORM
 - PostgreSQL
-- Joi (validação)
-- Jest (estrutura de testes)
+- RabbitMQ (amqplib)
+- Docker Compose
 
-## Arquitetura adotada
+## Arquitetura
 
-A estrutura segue camadas simples e separadas por responsabilidade:
-- controllers: entrada e saída HTTP
-- services: regras de negócio
-- repositories: acesso ao banco
-- validations: validação de payload
-- middlewares: logging e tratamento de erro
+```txt
+Client App
+   | HTTP/JSON
+Backend REST API
+   | SQL/TCP
+PostgreSQL
 
-Estrutura de pastas principal:
+Backend REST API
+   | AMQP
+RabbitMQ
+   |
+Notification Worker
+```
+
+Estrutura relevante da Sprint 2:
 
 ```txt
 src/
   app.ts
+  queues/rabbitmq.ts
+  producers/serviceRequestCreated.producer.ts
+  consumers/serviceRequestCreated.consumer.ts
+  workers/notification.worker.ts
   controllers/
   services/
   repositories/
   routes/
-  middlewares/
   validations/
-  entities/
+  middlewares/
   database/
+  entities/
+  types/
 ```
 
-## Critérios de avaliação atendidos
+## Fluxo assincrono implementado
 
-### 1. Clareza e viabilidade da proposta de domínio
+### Fluxo sincrono (HTTP)
 
-O projeto apresenta um domínio claro, objetivo e compatível com a Sprint 1: uma plataforma de serviços residenciais que conecta clientes e prestadores em um fluxo de cadastro, solicitação, atribuição, conclusão e avaliação.
+- Endpoint: `POST /api/requests` (alias: `POST /service-requests`)
+- A API valida os dados
+- A API salva no banco
+- A API responde `201 Created`
 
-Esse critério é sustentado por:
+### Fluxo assincrono (evento)
 
-- definição do problema e contexto em `docs/PROPOSTA.md`
-- perfis de usuário bem definidos: cliente e prestador
-- funcionalidades principais coerentes com um backend REST acadêmico
-- escopo técnico viável para a sprint
+- Producer publica evento `service.request.created`
+- RabbitMQ enfileira no nome de fila `service.request.created`
+- Worker consumidor recebe e processa com atraso simulado de 3 segundos
 
-### 2. Qualidade e completude do diagrama de arquitetura
+Logs esperados:
 
-O projeto possui documentação arquitetural específica, com descrição textual e diagrama da solução implementada na Sprint 1.
+```bash
+[API] Solicitacao criada: <requestId>
+[Producer] Evento publicado { ... }
+[Consumer] Evento recebido { ... }
+[Worker] Processando notificacao...
+[Worker] Notificacao enviada para a solicitacao <requestId> do cliente <clientId>
+```
 
-Esse critério é atendido por:
+## Documentacao do evento
 
-- visão geral da arquitetura em `docs/ARQUITETURA.md`
-- diagrama principal em `docs/DIAGRAMA_ARQUITETURA.md`
-- definição dos componentes centrais: App Cliente, App Prestador, Backend REST API e PostgreSQL
-- explicitação de que mensageria é uma possibilidade de evolução futura, nao fazendo parte da implementação atual
+Nome do evento:
 
-### 3. Funcionalidade e correção dos endpoints REST
+```txt
+service.request.created
+```
 
-A API disponibiliza endpoints REST organizados por recurso, com operações de criação, listagem, consulta por ID, atualização e remoção, além de fluxos específicos do domínio, como atribuição e conclusão de solicitação.
+Payload:
 
-Esse critério é atendido por:
+```json
+{
+  "event": "service.request.created",
+  "requestId": "a9b39d40-7229-4628-bf8a-4e4b9f68d900",
+  "clientId": "2fd3d0c2-0f58-489e-88dd-cd640d5c97f4",
+  "status": "OPEN",
+  "createdAt": "2026-05-25T20:00:00.000Z"
+}
+```
 
-- rotas separadas por contexto em `src/routes/`
-- controllers dedicados em `src/controllers/`
-- regras de negócio em `src/services/`
-- validações com Joi em `src/validations/`
-- suporte a respostas em JSON e códigos HTTP adequados aos fluxos principais
+- Producer: Backend REST API
+- Consumer: Notification Worker
+- Fila: `service.request.created`
+- Tipo: Async Event
 
-Exemplos de recursos cobertos:
+## Variaveis de ambiente
 
-- usuários
-- categorias
-- solicitações
-- avaliações
-- health check da API
+Copie `.env.example` para `.env`.
 
-### 4. Organização do código (Clean Architecture / boas práticas)
+```env
+PORT=3000
+DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
+RABBITMQ_URL=amqp://localhost:5672
+NODE_ENV=development
+```
 
-O projeto segue uma arquitetura em camadas com separação clara de responsabilidades, favorecendo manutenção, legibilidade e evolução incremental do backend.
+## Execucao com Docker Compose
 
-Esse critério é atendido por:
+Subir tudo (backend + postgres + rabbitmq + worker):
 
-- `controllers` para entrada e saída HTTP
-- `services` para regras de negócio
-- `repositories` para acesso ao banco
-- `middlewares` para logging e tratamento de erro
-- `validations` para validação de payload
-- uso de TypeScript para tipagem e organização estrutural do código
+```bash
+docker compose up --build
+```
 
-### 5. Documentação e validação dos endpoints
+Servicos disponiveis:
 
-Os endpoints estão documentados no README e no guia de execução do projeto, permitindo validação manual e apresentação prática do sistema.
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api/docs`
+- RabbitMQ Management: `http://localhost:15672` (guest/guest)
+- AMQP: `localhost:5672`
 
-Esse critério é atendido por:
+## Execucao local (sem container para a API)
 
-- listagem dos endpoints principais neste README
-- guia de execução e testes manuais em `COMO_RODAR.md`
-
-Com isso, o projeto oferece uma base suficiente para demonstração, validação funcional e apresentação acadêmica da API.
-
-## Como executar
-
-1. Instale dependências:
+1. Instale dependencias:
 
 ```bash
 npm install
 ```
 
-2. Configure variáveis de ambiente (copie `.env.example` para `.env` e ajuste):
+2. Suba Postgres e RabbitMQ via Docker:
 
-```env
-PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
-NODE_ENV=development
+```bash
+docker compose up -d postgres rabbitmq
 ```
 
-Se voce ja tiver um PostgreSQL local em execucao na porta `5432`, use a configuracao acima para conectar no banco do Docker pela porta `5433` e evitar conflito.
-
-Se quiser rodar sem Docker, ajuste o `DATABASE_URL` para o seu PostgreSQL local, por exemplo:
-
-```env
-PORT=3000
-DATABASE_URL=postgresql://SEU_USUARIO:SUA_SENHA@localhost:5432/home_service_db
-NODE_ENV=development
-```
-
-Antes da migration, garanta que o banco `home_service_db` exista na sua instalacao local do PostgreSQL.
-
-3. Rode migrations:
+3. Rode migration:
 
 ```bash
 npx prisma migrate dev
 ```
 
-4. Inicie a API:
+4. Inicie API e worker em terminais separados:
 
 ```bash
 npm run dev
+npm run dev:worker
 ```
-
-Servidor: `http://localhost:3000`
-
-Swagger UI: `http://localhost:3000/api/docs`
-
-OpenAPI JSON: `http://localhost:3000/api/docs.json`
 
 ## Endpoints principais
 
-### Health
 - GET `/api/health`
-
-### Usuários
-- POST `/api/users`
-- GET `/api/users`
-- GET `/api/users/providers`
-- GET `/api/users/:id`
-- PUT `/api/users/:id`
-- DELETE `/api/users/:id`
-
-### Solicitações
 - POST `/api/requests`
+- POST `/service-requests` (alias)
 - GET `/api/requests`
-- GET `/api/requests/open`
-- GET `/api/requests/client/:clientId`
-- GET `/api/requests/:id`
 - PUT `/api/requests/:requestId/assign`
 - PUT `/api/requests/:requestId/complete`
 - PUT `/api/requests/:requestId/cancel`
-- DELETE `/api/requests/:id`
 
-### Categorias
-- POST `/api/categories`
-- GET `/api/categories`
-- GET `/api/categories/:id`
-- PUT `/api/categories/:id`
-- DELETE `/api/categories/:id`
+Demais endpoints seguem ativos para usuarios, categorias e avaliacoes.
 
-### Avaliações
-- POST `/api/reviews`
-- GET `/api/reviews`
-- GET `/api/reviews/:id`
-- PUT `/api/reviews/:id`
-- DELETE `/api/reviews/:id`
+## Evidencias para apresentacao
 
-## Exemplo rápido de request
-
-Criar usuário:
-
-```http
-POST /api/users
-Content-Type: application/json
-```
-
-```json
-{
-  "name": "João Silva",
-  "email": "joao@example.com",
-  "phone": "11999999999",
-  "userType": "CLIENT",
-  "address": "Rua A, 123",
-  "city": "São Paulo",
-  "state": "SP"
-}
-```
-
-## Tratamento de erros
-
-A API retorna erros em JSON no formato:
-
-```json
-{
-  "error": "mensagem"
-}
-```
-
-Status mais comuns:
-- 200 OK
-- 201 Created
-- 400 Bad Request
-- 404 Not Found
-- 500 Internal Server Error
+1. Print do RabbitMQ Management com fila `service.request.created`
+2. `docker compose ps` com backend, worker, postgres e rabbitmq ativos
+3. Log da API com `[Producer] Evento publicado`
+4. Log do worker com `[Consumer] Evento recebido`
+5. Requisicao `POST /api/requests` respondendo 201 antes do processamento do worker
 
 ## Testes
 
@@ -240,6 +186,9 @@ Status mais comuns:
 npm test
 ```
 
-## Observação
+## Documentos de apoio
 
-A documentação acadêmica da proposta e arquitetura está em `docs/`.
+- `docs/integration-report.md`
+- `docs/API_ENDPOINTS.md`
+- `docs/ARQUITETURA.md`
+- `COMO_RODAR.md`

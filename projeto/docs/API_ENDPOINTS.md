@@ -91,6 +91,10 @@ Codigos comuns:
 ### POST /requests
 Cria uma solicitacao de servico.
 
+Comportamento:
+- fluxo sincrono: valida, salva e retorna 201
+- fluxo assincrono: publica evento `service.request.created` no RabbitMQ
+
 Payload:
 
 ```json
@@ -103,6 +107,25 @@ Payload:
   "estimatedPrice": 200
 }
 ```
+
+Codigos comuns:
+- 201 Created
+- 400 Bad Request
+
+Evento publicado:
+
+```json
+{
+  "event": "service.request.created",
+  "requestId": "uuid",
+  "clientId": "uuid",
+  "status": "OPEN",
+  "createdAt": "2026-05-25T20:00:00.000Z"
+}
+```
+
+### POST /service-requests
+Alias do endpoint de criacao de solicitacoes (sem prefixo `/api`).
 
 Codigos comuns:
 - 201 Created

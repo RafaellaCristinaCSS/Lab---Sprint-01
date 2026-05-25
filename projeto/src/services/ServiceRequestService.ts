@@ -2,16 +2,20 @@ import { ServiceRequestRepository } from "../repositories/ServiceRequestReposito
 import { ServiceCategoryRepository } from "../repositories/ServiceCategoryRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { ServiceRequest } from "../entities";
+import { ServiceRequestCreatedProducer } from "../producers/serviceRequestCreated.producer";
+import { ServiceRequestCreatedEvent } from "../types/events";
 
 export class ServiceRequestService {
     private serviceRequestRepository: ServiceRequestRepository;
     private serviceCategoryRepository: ServiceCategoryRepository;
     private userRepository: UserRepository;
+    private serviceRequestCreatedProducer: ServiceRequestCreatedProducer;
 
     constructor() {
         this.serviceRequestRepository = new ServiceRequestRepository();
         this.serviceCategoryRepository = new ServiceCategoryRepository();
         this.userRepository = new UserRepository();
+        this.serviceRequestCreatedProducer = new ServiceRequestCreatedProducer();
     }
 
     async createServiceRequest(data: {
@@ -32,10 +36,26 @@ export class ServiceRequestService {
             throw new Error("Category not found");
         }
 
-        return this.serviceRequestRepository.create({
+        const createdRequest = await this.serviceRequestRepository.create({
             ...data,
             status: "OPEN"
         });
+
+        const eventPayload: ServiceRequestCreatedEvent = {
+            event: "service.request.created",
+            requestId: createdRequest.id,
+            clientId: createdRequest.clientId,
+            status: createdRequest.status,
+            createdAt: createdRequest.createdAt.toISOString()
+        };
+
+        try {
+            await this.serviceRequestCreatedProducer.publish(eventPayload);
+        } catch (error) {
+            console.error("[Producer] Falha ao publicar evento service.request.created:", error);
+        }
+
+        return createdRequest;
     }
 
     async getServiceRequestById(id: string): Promise<ServiceRequest | null> {

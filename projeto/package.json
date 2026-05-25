@@ -6,6 +6,8 @@
     "scripts": {
         "start": "node dist/app.js",
         "dev": "ts-node src/app.ts",
+        "worker": "node dist/workers/notification.worker.js",
+        "dev:worker": "ts-node src/workers/notification.worker.ts",
         "build": "tsc",
         "test": "jest"
     },
@@ -18,25 +20,27 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "express": "^4.18.2",
+        "@prisma/client": "^4.15.0",
+        "@types/amqplib": "^0.10.8",
+        "amqplib": "^2.0.1",
         "cors": "^2.8.5",
         "dotenv": "^16.0.3",
-        "prisma": "^4.15.0",
-        "@prisma/client": "^4.15.0",
-        "uuid": "^9.0.0",
+        "express": "^4.18.2",
         "joi": "^17.9.2",
-        "swagger-ui-express": "^5.0.1"
+        "prisma": "^4.15.0",
+        "swagger-ui-express": "^5.0.1",
+        "uuid": "^9.0.0"
     },
     "devDependencies": {
-        "typescript": "^5.0.0",
-        "ts-node": "^10.9.1",
-        "@types/express": "^4.17.17",
         "@types/cors": "^2.8.17",
-        "@types/node": "^20.0.0",
-        "@types/uuid": "^9.0.2",
+        "@types/express": "^4.17.17",
         "@types/jest": "^29.5.0",
+        "@types/node": "^20.0.0",
         "@types/swagger-ui-express": "^4.1.8",
+        "@types/uuid": "^9.0.2",
         "jest": "^29.5.0",
-        "ts-jest": "^29.1.0"
+        "ts-jest": "^29.1.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.0.0"
     }
 }

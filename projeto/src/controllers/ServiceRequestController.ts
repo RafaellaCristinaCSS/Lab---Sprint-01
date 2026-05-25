@@ -28,8 +28,10 @@ export class ServiceRequestController {
                 estimatedPrice
             });
 
+            console.log(`[API] Solicitacao criada: ${serviceRequest.id}`);
+
             res.status(201).json({
-                message: "Service request created successfully",
+                message: "Solicitacao criada com sucesso",
                 data: serviceRequest
             });
         } catch (error: any) {

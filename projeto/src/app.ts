@@ -21,6 +21,7 @@ app.use(requestLogger);
 
 app.use("/api/users", userRoutes);
 app.use("/api/requests", serviceRequestRoutes);
+app.use("/service-requests", serviceRequestRoutes);
 app.use("/api/categories", serviceCategoryRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));

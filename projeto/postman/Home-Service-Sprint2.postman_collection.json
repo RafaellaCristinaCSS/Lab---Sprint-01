@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "Home Service API - Sprint 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colecao para demonstracao do fluxo assincrono com RabbitMQ"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "clientId",
+      "value": "COLE_O_CLIENT_ID"
+    },
+    {
+      "key": "categoryId",
+      "value": "COLE_O_CATEGORY_ID"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Criar Solicitacao (API)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"title\": \"Troca de tomada\",\n  \"description\": \"Preciso trocar uma tomada que parou de funcionar no quarto\",\n  \"scheduledDate\": \"2026-05-20T14:00:00.000Z\",\n  \"estimatedPrice\": 120\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "requests"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('response has message and data', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('message');",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Criar Solicitacao (Alias)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"title\": \"Conserto de chuveiro\",\n  \"description\": \"Chuveiro queimou e precisa de troca de resistencia\",\n  \"scheduledDate\": \"2026-05-21T10:00:00.000Z\",\n  \"estimatedPrice\": 150\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/service-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "service-requests"
+          ]
+        }
+      }
+    }
+  ]
+}

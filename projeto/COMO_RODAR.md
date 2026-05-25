@@ -1,177 +1,94 @@
-﻿# Como rodar e testar o software
+﻿# Como rodar e testar o software (Sprint 2)
 
-Este projeto pode ser testado de 2 formas:
-
-1. usando o PostgreSQL instalado no seu computador
-2. usando PostgreSQL via Docker
-
-Se voce quer apresentar local no seu notebook, prefira a opcao 1.
+Este guia cobre backend + PostgreSQL + RabbitMQ + worker assincrono.
 
 ## 1. Preparar o projeto
 
-No PowerShell, entre na pasta do projeto e instale as dependencias:
+No PowerShell:
 
 ```powershell
 cd projeto
 npm install
-```
-
-Crie o arquivo `.env`:
-
-```powershell
 Copy-Item .env.example .env
 ```
 
-## 2. Configurar o banco de dados
-
-### Opcao 1: PostgreSQL local no seu notebook
-
-Edite o arquivo `.env` e coloque o usuario e a senha reais do seu PostgreSQL local.
-
-Exemplo:
+Edite `.env` se necessario:
 
 ```env
 PORT=3000
-DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/home_service_db"
+DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
+RABBITMQ_URL=amqp://localhost:5672
 NODE_ENV=development
 ```
 
-Antes de rodar a migration, o banco `home_service_db` precisa existir.
+## 2. Subir infraestrutura com Docker
 
-Se voce ja tiver o `psql` no PATH, pode criar assim:
-
-```powershell
-createdb -U postgres home_service_db
-```
-
-Se nao tiver, abra o pgAdmin ou outro cliente PostgreSQL e crie o banco manualmente com o nome `home_service_db`.
-
-### Opcao 2: PostgreSQL via Docker
-
-Use essa opcao somente se quiser subir um banco isolado pelo Docker.
-
-Pre-requisito no Windows:
+Pre-requisito:
 
 ```powershell
 docker version
 ```
 
-Se esse comando falhar, abra o Docker Desktop e espere o engine iniciar.
-
-Depois suba o banco:
+Suba os servicos:
 
 ```powershell
-docker compose up -d postgres
+docker compose up -d postgres rabbitmq
 docker compose ps
 ```
 
-Nessa opcao, o projeto esta configurado para acessar o banco pela porta `5433` no host.
+RabbitMQ Management:
+
+```text
+http://localhost:15672
+```
+
+Usuario e senha padrao:
+
+```text
+guest / guest
+```
 
 ## 3. Criar as tabelas
 
-Com o banco pronto, rode:
+Com o banco pronto:
 
 ```powershell
 npx prisma migrate dev --name init
 ```
 
-Esse comando deve:
+## 4. Subir API e worker
 
-1. conectar no PostgreSQL
-2. criar a estrutura do banco
-3. gerar o client do Prisma
+Use dois terminais.
 
-Se esse passo falhar, a API nao vai funcionar corretamente.
-
-## 4. Popular dados iniciais
-
-Se voce quiser cadastrar dados para demonstracao, utilize os endpoints da API no Postman ou no Insomnia depois que a aplicacao estiver rodando.
-
-## 5. Subir a API
-
-Rode:
+Terminal 1 (API):
 
 ```powershell
 npm run dev
 ```
 
-A API deve ficar disponivel em:
+Terminal 2 (worker):
 
-```text
-http://localhost:3000
+```powershell
+npm run dev:worker
 ```
 
-Swagger para testar todos os endpoints:
+## 5. Validar funcionamento
 
-```text
-http://localhost:3000/api/docs
-```
-
-## 6. Confirmar que o software esta funcionando
-
-Faça estes testes minimos.
-
-### Teste 1: health check
-
-Abra no navegador ou no Postman:
+### Teste 1: Health check
 
 ```text
 GET http://localhost:3000/api/health
 ```
 
-Voce deve receber um JSON com `status: healthy`.
+Esperado: JSON com `status: healthy`.
 
-### Teste 1.1: abrir Swagger
-
-Abra no navegador:
+### Teste 2: Swagger
 
 ```text
 GET http://localhost:3000/api/docs
 ```
 
-Voce deve ver a interface Swagger com todas as rotas da API.
-
-### Teste 2: listar usuarios
-
-Se voce ja cadastrou usuarios no banco, teste:
-
-```text
-GET http://localhost:3000/api/users
-```
-
-Voce deve receber os usuarios cadastrados no sistema.
-
-### Teste 3: listar categorias
-
-```text
-GET http://localhost:3000/api/categories
-```
-
-Voce deve receber categorias como Encanamento, Eletricidade e Limpeza.
-
-### Teste 4: listar solicitacoes
-
-```text
-GET http://localhost:3000/api/requests
-```
-
-Se ja existir alguma solicitacao cadastrada, ela sera listada nesse endpoint.
-
-### Teste 5: cadastrar solicitacao
-
-Para esse teste, voce precisa de:
-
-1. um `clientId` de um usuario com `userType = CLIENT`
-2. um `categoryId` de uma categoria existente
-
-Voce pode pegar esses IDs em:
-
-```text
-GET http://localhost:3000/api/users
-GET http://localhost:3000/api/categories
-```
-
-Depois faca o POST:
+### Teste 3: Criar solicitacao (dispara evento)
 
 ```text
 POST http://localhost:3000/api/requests
@@ -189,49 +106,61 @@ Content-Type: application/json
 }
 ```
 
-Se estiver tudo certo, a API deve responder com `201 Created` e retornar a solicitacao criada.
+Resposta esperada:
 
-## 7. Rodar os testes automatizados
+```json
+{
+	"message": "Solicitacao criada com sucesso",
+	"data": {
+		"id": "..."
+	}
+}
+```
 
-Se quiser validar a aplicacao por testes:
+### Teste 4: Evidencia de assincronicidade
+
+No terminal da API:
+
+```bash
+[API] Solicitacao criada: <requestId>
+[Producer] Evento publicado {...}
+```
+
+No terminal do worker (depois da resposta HTTP):
+
+```bash
+[Consumer] Evento recebido {...}
+[Worker] Processando notificacao...
+[Worker] Notificacao enviada para a solicitacao <requestId> do cliente <clientId>
+```
+
+## 6. Opcao alternativa: subir tudo pelo compose
+
+```powershell
+docker compose up --build
+```
+
+Esse comando sobe `backend`, `worker`, `postgres` e `rabbitmq`.
+
+## 7. Rodar testes automatizados
 
 ```powershell
 npm test
 ```
 
-## 8. Fluxo recomendado para sua apresentacao local
-
-Se voce for apresentar sem Docker, a ordem mais segura e:
-
-1. confirmar o `.env` com seu PostgreSQL local
-2. rodar `npx prisma migrate dev --name init`
-3. rodar `npm run dev`
-4. abrir `GET /api/health`
-5. mostrar `GET /api/users`
-6. mostrar `GET /api/categories`
-7. mostrar `POST /api/requests`
-
 ## Troubleshooting
 
 ### Erro `P1001: Can't reach database server`
 
-Isso significa que o Prisma nao conseguiu chegar no PostgreSQL.
+Verifique se o `DATABASE_URL` aponta para `localhost:5433` quando usar PostgreSQL do Docker.
 
-Verifique:
+### Erro ao conectar no RabbitMQ
 
-1. se o PostgreSQL esta ligado
-2. se o `DATABASE_URL` esta correto
-3. se a porta esta correta: `5432` para PostgreSQL local ou `5433` para Docker deste projeto
-4. se o banco `home_service_db` existe
+1. confira se `docker compose ps` mostra `rabbitmq` ativo
+2. confira `RABBITMQ_URL=amqp://localhost:5672`
+3. teste o painel em `http://localhost:15672`
 
-### Erro de senha ou autenticacao
+### API responde 201 mas worker nao processa
 
-Se aparecer erro de autenticacao, o `.env` esta sendo lido, mas o usuario ou a senha do PostgreSQL estao errados.
-
-### API nao sobe mesmo com migration pronta
-
-Confirme se a porta `3000` esta livre e rode novamente:
-
-```powershell
-npm run dev
-```
+1. confirme que `npm run dev:worker` esta rodando
+2. veja se a fila `service.request.created` existe no RabbitMQ Management

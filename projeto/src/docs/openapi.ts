@@ -128,6 +128,16 @@ export const openApiSpec = {
                     estimatedPrice: { type: "number", minimum: 0 }
                 }
             },
+            ServiceRequestCreatedEvent: {
+                type: "object",
+                properties: {
+                    event: { type: "string", example: "service.request.created" },
+                    requestId: { type: "string", format: "uuid" },
+                    clientId: { type: "string", format: "uuid" },
+                    status: { type: "string", example: "OPEN" },
+                    createdAt: { type: "string", format: "date-time" }
+                }
+            },
             AssignProviderInput: {
                 type: "object",
                 required: ["providerId"],
@@ -464,18 +474,39 @@ export const openApiSpec = {
         "/api/requests": {
             post: {
                 tags: ["Requests"],
-                summary: "Cria solicitacao de servico",
+                summary: "Cria solicitacao de servico e publica evento assincrono no RabbitMQ",
+                description:
+                    "Fluxo sincrono: valida e salva no banco, retornando 201. Fluxo assincrono: publica o evento service.request.created para processamento em worker desacoplado.",
                 requestBody: {
                     required: true,
                     content: {
                         "application/json": {
-                            schema: { $ref: "#/components/schemas/CreateServiceRequestInput" }
+                            schema: { $ref: "#/components/schemas/CreateServiceRequestInput" },
+                            example: {
+                                clientId: "0f3d6d95-8f6f-44db-b2af-6be5f1fceabc",
+                                categoryId: "86f8e8ea-4b9e-4f8a-a5c0-7b2b0ad4efab",
+                                title: "Troca de tomada",
+                                description: "Preciso trocar uma tomada que parou de funcionar no quarto",
+                                scheduledDate: "2026-05-20T14:00:00.000Z",
+                                estimatedPrice: 120
+                            }
                         }
                     }
                 },
                 responses: {
                     "201": {
-                        description: "Solicitacao criada"
+                        description: "Solicitacao criada com sucesso",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "Solicitacao criada com sucesso" },
+                                        data: { $ref: "#/components/schemas/ServiceRequest" }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "400": {
                         description: "Erro de validacao ou regra de negocio"
@@ -488,6 +519,28 @@ export const openApiSpec = {
                 responses: {
                     "200": {
                         description: "Lista de solicitacoes"
+                    }
+                }
+            }
+        },
+        "/service-requests": {
+            post: {
+                tags: ["Requests"],
+                summary: "Alias de POST /api/requests para criacao de solicitacao",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: { $ref: "#/components/schemas/CreateServiceRequestInput" }
+                        }
+                    }
+                },
+                responses: {
+                    "201": {
+                        description: "Solicitacao criada com sucesso"
+                    },
+                    "400": {
+                        description: "Erro de validacao ou regra de negocio"
                     }
                 }
             }

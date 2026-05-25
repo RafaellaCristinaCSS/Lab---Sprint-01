@@ -2,42 +2,67 @@
 
 ## Visão geral
 
-A entrega implementada nesta Sprint 1 contempla os seguintes blocos:
+Esta entrega da Sprint 2 contempla os seguintes blocos:
 - Backend REST API
 - Banco de Dados PostgreSQL
-
-Como visao de sistema, a API foi pensada para ser consumida por uma aplicacao unica, web ou mobile, com suporte a diferentes perfis de usuario dentro do mesmo sistema.
-
-Na modelagem atual, cliente e prestador representam papeis de uso da plataforma, e nao aplicacoes separadas.
-
-Essa interface unica ainda nao faz parte da implementacao atual da sprint.
-
-Como evolução futura, o projeto pode incluir uma camada de mensageria (MOM) para eventos assíncronos, mas essa parte nao foi implementada nesta sprint.
+- RabbitMQ (MOM)
+- Worker consumidor para processamento assincrono
 
 ## Comunicação entre componentes
 
 - Aplicacao cliente da plataforma -> Backend: HTTP/HTTPS com JSON
 - Backend -> Banco: Prisma ORM sobre PostgreSQL
+- Backend -> RabbitMQ: AMQP (publicacao de eventos)
+- RabbitMQ -> Worker: consumo assíncrono de eventos
 
-Na implementacao atual da Sprint 1, nao existe integracao com RabbitMQ, Kafka ou outro broker.
+Diagrama simplificado:
+
+```txt
+Client App
+	| HTTP/JSON
+Backend REST API
+	| SQL/TCP
+PostgreSQL
+
+Backend REST API
+	| AMQP
+RabbitMQ
+	|
+Notification Worker
+```
 
 ## Fluxo principal
 
-1. Usuario acessa a plataforma e atua conforme seu perfil de uso.
+1. Cliente envia `POST /api/requests`.
 2. Backend valida e persiste a solicitacao.
-3. Prestador assume a solicitacao.
-4. Backend atualiza status e registra conclusao.
-5. Cliente envia avaliacao.
+3. Backend retorna `201 Created` (fluxo sincrono).
+4. Backend publica evento `service.request.created` no RabbitMQ.
+5. Worker consome a fila `service.request.created`.
+6. Worker executa processamento assincrono desacoplado.
 
-Na entrega atual, o foco esta no backend e no banco de dados. A interface da aplicacao ainda esta prevista como consumidor futuro da API.
+Esse fluxo comprova assincronicidade real: a resposta HTTP ocorre antes do processamento do worker.
 
-Observacao: uma etapa de publicacao de eventos assincronos pode ser adicionada no futuro, mas nao faz parte da entrega atual.
+Evento publicado:
+
+```json
+{
+  "event": "service.request.created",
+  "requestId": "uuid",
+  "clientId": "uuid",
+  "status": "OPEN",
+  "createdAt": "2026-05-25T20:00:00.000Z"
+}
+```
 
 ## Organização interna do backend
 
 - controllers: mapeiam requisição e resposta
 - services: aplicam regras de negócio
 - repositories: acessam o banco
+- queues: conexao RabbitMQ e operacoes de publish/consume
+- producers: publicacao de eventos
+- consumers: regras de consumo por evento
+- workers: processo separado para executar consumidores
 - validations: validam dados de entrada
 - middlewares: logging e tratamento de erro
 
