@@ -154,6 +154,10 @@ npm run dev
 
 Servidor: `http://localhost:3000`
 
+Swagger UI: `http://localhost:3000/api/docs`
+
+OpenAPI JSON: `http://localhost:3000/api/docs.json`
+
 ## Endpoints principais
 
 ### Health

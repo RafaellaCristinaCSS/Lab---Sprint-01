@@ -101,6 +101,12 @@ A API deve ficar disponivel em:
 http://localhost:3000
 ```
 
+Swagger para testar todos os endpoints:
+
+```text
+http://localhost:3000/api/docs
+```
+
 ## 6. Confirmar que o software esta funcionando
 
 Faça estes testes minimos.
@@ -114,6 +120,16 @@ GET http://localhost:3000/api/health
 ```
 
 Voce deve receber um JSON com `status: healthy`.
+
+### Teste 1.1: abrir Swagger
+
+Abra no navegador:
+
+```text
+GET http://localhost:3000/api/docs
+```
+
+Voce deve ver a interface Swagger com todas as rotas da API.
 
 ### Teste 2: listar usuarios
 
