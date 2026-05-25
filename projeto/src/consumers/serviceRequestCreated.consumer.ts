@@ -1,11 +1,6 @@
 import { consumeMessages, SERVICE_REQUEST_CREATED_QUEUE } from "../queues/rabbitmq";
 import { ServiceRequestCreatedEvent } from "../types/events";
-
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
+import { sleep } from "../utils/async";
 
 export async function startServiceRequestCreatedConsumer(): Promise<void> {
     await consumeMessages(

@@ -38,6 +38,7 @@ export class ServiceRequestService {
 
         const createdRequest = await this.serviceRequestRepository.create({
             ...data,
+            clientName: client.name,
             status: "OPEN"
         });
 

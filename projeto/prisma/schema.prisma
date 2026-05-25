@@ -39,6 +39,7 @@ model ServiceCategory {
 model ServiceRequest {
   id             String   @id @default(uuid())
   clientId       String
+  clientName     String   @default("")
   providerId     String?
   categoryId     String
   title          String

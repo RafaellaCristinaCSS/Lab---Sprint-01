@@ -21,6 +21,7 @@ export interface ServiceCategory {
 export interface ServiceRequest {
     id: string;
     clientId: string;
+    clientName: string;
     providerId: string | null;
     categoryId: string;
     title: string;

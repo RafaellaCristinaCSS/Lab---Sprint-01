@@ -101,6 +101,7 @@ export const openApiSpec = {
                 properties: {
                     id: { type: "string", format: "uuid" },
                     clientId: { type: "string", format: "uuid" },
+                    clientName: { type: "string", example: "Joao Silva" },
                     providerId: { type: ["string", "null"], format: "uuid" },
                     categoryId: { type: "string", format: "uuid" },
                     title: { type: "string" },
