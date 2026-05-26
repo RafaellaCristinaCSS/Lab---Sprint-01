@@ -1,29 +1,30 @@
-﻿# Arquitetura do Sistema
+﻿# Diagrama de Arquitetura - Sprint 2
 
 ```mermaid
 flowchart LR
-    Web[Aplicacao Web]
-    Mobile[Aplicacao Mobile]
-
-    API[Backend REST API<br/>Node.js + Express + TypeScript]
-
+    C[Cliente]
+    API[Backend API\nNode.js + Express + TypeScript]
     DB[(PostgreSQL)]
+    MQ[(RabbitMQ\nQueue: service.request.created)]
+    W[Notification Worker]
+    L[Logs/Notificacao]
 
-    Web -->|HTTPS REST API<br/>HTTP/JSON| API
-    Mobile -->|HTTPS REST API<br/>HTTP/JSON| API
-
-    API -->|SQL/TCP<br/>PostgreSQL Protocol| DB
+    C -->|POST /service-requests| API
+    API -->|Prisma SQL| DB
+    API -->|Publish event| MQ
+    MQ -->|Consume event| W
+    W -->|Processamento assincrono| L
 ```
 
-## Leitura rápida
+## Leitura rapida
 
-- As aplicacoes web e mobile consomem a mesma API por HTTPS e JSON.
-- O backend usa Node.js, Express e TypeScript.
-- A persistência é feita em PostgreSQL.
+- A API salva dados no PostgreSQL e publica evento no RabbitMQ.
+- O worker consome o evento em processo separado.
+- O cliente recebe resposta HTTP antes do fim do processamento do worker.
 
-Observacao: RabbitMQ ou outra camada de mensageria pode ser adicionada como evolucao futura, mas nao foi implementada na versao atual.
+## Protocolos
 
-## Legenda técnica
-
-- HTTPS REST API e HTTP/JSON: comunicação entre aplicativos e backend
-- SQL/TCP e PostgreSQL Protocol: comunicação entre backend e banco
+- Cliente -> API: HTTP/JSON
+- API -> Banco: SQL/TCP (Prisma)
+- API -> RabbitMQ: AMQP (publish)
+- RabbitMQ -> Worker: AMQP (consume)

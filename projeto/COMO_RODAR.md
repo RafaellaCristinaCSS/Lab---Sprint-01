@@ -142,6 +142,32 @@ docker compose up --build
 
 Esse comando sobe `backend`, `worker`, `postgres` e `rabbitmq`.
 
+## 6.1 Rodar produtor e consumidor em servidores separados
+
+Use o arquivo `docker-compose.distributed.yml` quando API (producer) e worker (consumer) rodarem em maquinas diferentes.
+
+Requisito comum para os dois servidores: ambos devem enxergar o mesmo RabbitMQ.
+
+Servidor A (API / produtor):
+
+```powershell
+docker compose -f docker-compose.distributed.yml up -d backend
+```
+
+Servidor B (Worker / consumidor):
+
+```powershell
+docker compose -f docker-compose.distributed.yml up -d worker
+```
+
+Exemplo de variaveis de ambiente para modo distribuido:
+
+```env
+DATABASE_URL=postgresql://user:password@HOST_DO_POSTGRES:5432/home_service_db
+RABBITMQ_URL=amqp://HOST_DO_RABBITMQ:5672
+NODE_ENV=production
+```
+
 ## 7. Rodar testes automatizados
 
 ```powershell

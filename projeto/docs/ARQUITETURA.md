@@ -1,48 +1,47 @@
-﻿# Arquitetura do Sistema
+﻿# Arquitetura do Sistema - Sprint 2
 
-## Visão geral
+## Visao geral
 
-Esta entrega da Sprint 2 contempla os seguintes blocos:
-- Backend REST API
-- Banco de Dados PostgreSQL
+A arquitetura implementada e orientada a eventos, com dois fluxos complementares:
+
+- Fluxo sincrono: requisicao HTTP, validacao e persistencia no PostgreSQL.
+- Fluxo assincrono: publicacao do evento no RabbitMQ e processamento por worker desacoplado.
+
+Componentes principais:
+
+- Cliente (Postman/Swagger/app cliente)
+- Backend REST API (Node.js + Express + TypeScript)
+- PostgreSQL (Prisma ORM)
 - RabbitMQ (MOM)
-- Worker consumidor para processamento assincrono
+- Notification Worker (consumidor separado)
 
-## Comunicação entre componentes
+## Diagrama oficial
 
-- Aplicacao cliente da plataforma -> Backend: HTTP/HTTPS com JSON
-- Backend -> Banco: Prisma ORM sobre PostgreSQL
-- Backend -> RabbitMQ: AMQP (publicacao de eventos)
-- RabbitMQ -> Worker: consumo assíncrono de eventos
+O diagrama desta arquitetura esta em `docs/DIAGRAMA_ARQUITETURA.png`.
 
-Diagrama simplificado:
+## Comunicacao entre componentes
 
-```txt
-Client App
-	| HTTP/JSON
-Backend REST API
-	| SQL/TCP
-PostgreSQL
+- Cliente -> Backend: HTTP/JSON
+- Backend -> PostgreSQL: SQL/TCP via Prisma
+- Backend -> RabbitMQ: AMQP (publish)
+- RabbitMQ -> Worker: AMQP (consume)
 
-Backend REST API
-	| AMQP
-RabbitMQ
-	|
-Notification Worker
-```
+## Fluxo funcional implementado
 
-## Fluxo principal
-
-1. Cliente envia `POST /api/requests`.
-2. Backend valida e persiste a solicitacao.
-3. Backend retorna `201 Created` (fluxo sincrono).
-4. Backend publica evento `service.request.created` no RabbitMQ.
+1. Cliente envia `POST /service-requests` (alias) ou `POST /api/requests`.
+2. Backend valida os dados e persiste a solicitacao no PostgreSQL.
+3. Backend retorna `201 Created` imediatamente para o cliente.
+4. Backend publica o evento `service.request.created` no RabbitMQ.
 5. Worker consome a fila `service.request.created`.
-6. Worker executa processamento assincrono desacoplado.
+6. Worker executa processamento assincrono (com atraso simulado) e registra logs.
 
-Esse fluxo comprova assincronicidade real: a resposta HTTP ocorre antes do processamento do worker.
+Esse fluxo comprova assincronicidade real: a resposta HTTP acontece antes da conclusao do processamento no worker.
 
-Evento publicado:
+## Contrato do evento
+
+Nome: `service.request.created`
+
+Payload:
 
 ```json
 {
@@ -54,16 +53,18 @@ Evento publicado:
 }
 ```
 
-## Organização interna do backend
+## Mapeamento para o codigo
 
-- controllers: mapeiam requisição e resposta
-- services: aplicam regras de negócio
-- repositories: acessam o banco
-- queues: conexao RabbitMQ e operacoes de publish/consume
-- producers: publicacao de eventos
-- consumers: regras de consumo por evento
-- workers: processo separado para executar consumidores
-- validations: validam dados de entrada
-- middlewares: logging e tratamento de erro
+- Roteamento HTTP: `src/app.ts`
+- Caso de uso principal (persistencia + publish): `src/services/ServiceRequestService.ts`
+- Producer: `src/producers/serviceRequestCreated.producer.ts`
+- Conexao e operacoes RabbitMQ: `src/queues/rabbitmq.ts`
+- Consumer: `src/consumers/serviceRequestCreated.consumer.ts`
+- Worker: `src/workers/notification.worker.ts`
 
-Essa separação facilita manutenção, testes e evolução da API.
+## Decisoes arquiteturais
+
+- Desacoplamento entre API e processamento de notificacoes.
+- Possibilidade de escalar workers sem afetar latencia da API.
+- Melhor resiliencia para tarefas de background.
+- Base pronta para adicionar novos eventos e consumidores.

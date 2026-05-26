@@ -1,0 +1,13 @@
+flowchart LR
+    C[Cliente]
+    API[Backend API\nNode.js + Express + TypeScript]
+    DB[(PostgreSQL)]
+    MQ[(RabbitMQ\nQueue: service.request.created)]
+    W[Notification Worker]
+    L[Logs/Notificacao]
+
+    C -->|POST /service-requests| API
+    API -->|Prisma SQL| DB
+    API -->|Publish event| MQ
+    MQ -->|Consume event| W
+    W -->|Processamento assincrono| L

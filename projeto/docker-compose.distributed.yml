@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      NODE_ENV: ${NODE_ENV:-production}
+
+  worker:
+    build: .
+    command: npm run worker
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      NODE_ENV: ${NODE_ENV:-production}

@@ -11,7 +11,7 @@ export async function startServiceRequestCreatedConsumer(): Promise<void> {
             console.log("[Consumer] Evento recebido", event);
             console.log("[Worker] Processando notificacao...");
 
-            await sleep(3000);
+            await sleep(10000);
 
             console.log(
                 `[Worker] Notificacao enviada para a solicitacao ${event.requestId} do cliente ${event.clientId}`

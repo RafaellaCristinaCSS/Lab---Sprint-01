@@ -133,6 +133,25 @@ Servicos disponiveis:
 - RabbitMQ Management: `http://localhost:15672` (guest/guest)
 - AMQP: `localhost:5672`
 
+### Modo distribuido (servidores separados)
+
+Para rodar producer e consumer em servidores separados, use `docker-compose.distributed.yml`.
+
+- Servidor da API (producer):
+
+```bash
+docker compose -f docker-compose.distributed.yml up -d backend
+```
+
+- Servidor do Worker (consumer):
+
+```bash
+docker compose -f docker-compose.distributed.yml up -d worker
+```
+
+Ambos devem apontar para o mesmo RabbitMQ via `RABBITMQ_URL`.
+No servidor da API, configure tambem `DATABASE_URL` para o PostgreSQL compartilhado.
+
 ## Execucao local (sem container para a API)
 
 1. Instale dependencias:
