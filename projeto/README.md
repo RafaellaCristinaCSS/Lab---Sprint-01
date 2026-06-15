@@ -113,7 +113,7 @@ Copie `.env.example` para `.env`.
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
+DATABASE_URL=postgresql://user:password@localhost:5432/home_service_db
 RABBITMQ_URL=amqp://localhost:5672
 NODE_ENV=development
 ```
@@ -211,3 +211,19 @@ npm test
 - `docs/API_ENDPOINTS.md`
 - `docs/ARQUITETURA.md`
 - `COMO_RODAR.md`
+
+## Sprint 3 - Frontend React + TypeScript
+
+A implementacao do frontend da Sprint 3 esta em `frontend/`.
+
+Execucao:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Documentacao completa da Sprint 3:
+
+- `frontend/README.md`

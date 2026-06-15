@@ -7,3 +7,12 @@ dist/
 coverage/
 .idea/
 .vscode/
+
+# Frontend (Vite/React)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+frontend/.vite/
