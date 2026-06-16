@@ -3,7 +3,8 @@ import { NavLink, Outlet } from "react-router-dom";
 const navItems = [
   { to: "/", label: "Dashboard" },
   { to: "/requests", label: "Solicitacoes" },
-  { to: "/requests/new", label: "Nova solicitacao" }
+  { to: "/requests/new", label: "Nova solicitacao" },
+  { to: "/users/new", label: "Cadastrar usuario" },
 ];
 
 export function MainLayout() {
