@@ -39,14 +39,14 @@ export class ServiceRequestService {
         const createdRequest = await this.serviceRequestRepository.create({
             ...data,
             clientName: client.name,
-            status: "OPEN"
+            status: "PENDING"
         });
 
         const eventPayload: ServiceRequestCreatedEvent = {
             event: "service.request.created",
             requestId: createdRequest.id,
             clientId: createdRequest.clientId,
-            status: createdRequest.status,
+            status: "PENDING",
             createdAt: createdRequest.createdAt.toISOString()
         };
 
@@ -85,6 +85,10 @@ export class ServiceRequestService {
             throw new Error("Request not found");
         }
 
+        if (request.status !== "OPEN") {
+            throw new Error("Request is not available for assignment");
+        }
+
         const provider = await this.userRepository.findById(providerId);
         if (!provider || provider.userType !== "PROVIDER") {
             throw new Error("Invalid provider");
@@ -96,10 +100,37 @@ export class ServiceRequestService {
         });
     }
 
-    async completeRequest(requestId: string, finalPrice?: number): Promise<ServiceRequest> {
+    async startRequest(requestId: string, providerId: string): Promise<ServiceRequest> {
         const request = await this.serviceRequestRepository.findById(requestId);
         if (!request) {
             throw new Error("Request not found");
+        }
+
+        if (request.status !== "ASSIGNED") {
+            throw new Error("Request must be assigned before starting");
+        }
+
+        if (request.providerId !== providerId) {
+            throw new Error("Only the assigned provider can start this request");
+        }
+
+        return this.serviceRequestRepository.update(requestId, {
+            status: "IN_PROGRESS"
+        });
+    }
+
+    async completeRequest(requestId: string, finalPrice?: number, providerId?: string): Promise<ServiceRequest> {
+        const request = await this.serviceRequestRepository.findById(requestId);
+        if (!request) {
+            throw new Error("Request not found");
+        }
+
+        if (!["ASSIGNED", "IN_PROGRESS"].includes(request.status)) {
+            throw new Error("Request cannot be completed in current status");
+        }
+
+        if (providerId && request.providerId !== providerId) {
+            throw new Error("Only the assigned provider can complete this request");
         }
 
         return this.serviceRequestRepository.update(requestId, {
@@ -114,9 +145,28 @@ export class ServiceRequestService {
             throw new Error("Request not found");
         }
 
+        if (["COMPLETED", "CANCELLED"].includes(request.status)) {
+            throw new Error("Request cannot be cancelled in current status");
+        }
+
         return this.serviceRequestRepository.update(requestId, {
             status: "CANCELLED",
             providerId: null
+        });
+    }
+
+    async markRequestAsOpen(requestId: string): Promise<ServiceRequest> {
+        const request = await this.serviceRequestRepository.findById(requestId);
+        if (!request) {
+            throw new Error("Request not found");
+        }
+
+        if (request.status !== "PENDING") {
+            return request;
+        }
+
+        return this.serviceRequestRepository.update(requestId, {
+            status: "OPEN"
         });
     }
 

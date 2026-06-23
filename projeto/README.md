@@ -211,3 +211,17 @@ npm test
 - `docs/API_ENDPOINTS.md`
 - `docs/ARQUITETURA.md`
 - `COMO_RODAR.md`
+- `app/COMO_RODAR.md` (Flutter)
+
+## App Flutter
+
+O app mobile esta em `app/` com Clean Architecture (presentation/domain/data), fluxos separados para Cliente e Fornecedor, integracao REST e polling assincrono.
+
+Primeira execucao:
+
+```bash
+cd app
+flutter create . --project-name home_service_app
+flutter pub get
+flutter run
+```

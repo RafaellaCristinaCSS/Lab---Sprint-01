@@ -9,7 +9,8 @@
         "worker": "node dist/workers/notification.worker.js",
         "dev:worker": "ts-node src/workers/notification.worker.ts",
         "build": "tsc",
-        "test": "jest"
+        "test": "jest",
+        "seed": "node scripts/seed-demo-data.js"
     },
     "keywords": [
         "REST",

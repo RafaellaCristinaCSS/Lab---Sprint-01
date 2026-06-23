@@ -23,8 +23,13 @@ export const assignProviderSchema = Joi.object({
     providerId: Joi.string().uuid().required()
 });
 
+export const startRequestSchema = Joi.object({
+    providerId: Joi.string().uuid().required()
+});
+
 export const completeRequestSchema = Joi.object({
-    finalPrice: Joi.number().positive()
+    finalPrice: Joi.number().positive(),
+    providerId: Joi.string().uuid()
 });
 
 export const createReviewSchema = Joi.object({

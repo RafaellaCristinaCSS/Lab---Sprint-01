@@ -109,6 +109,22 @@ export class ServiceRequestController {
         }
     }
 
+    async getProviderRequests(req: Request, res: Response): Promise<void> {
+        try {
+            const { providerId } = req.params;
+            const requests = await this.serviceRequestService.getProviderRequests(providerId);
+
+            res.status(200).json({
+                data: requests,
+                count: requests.length
+            });
+        } catch (error: any) {
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
+
     async assignProvider(req: Request, res: Response): Promise<void> {
         try {
             const { requestId } = req.params;
@@ -130,14 +146,36 @@ export class ServiceRequestController {
         }
     }
 
+    async startRequest(req: Request, res: Response): Promise<void> {
+        try {
+            const { requestId } = req.params;
+            const { providerId } = req.body;
+
+            const updatedRequest = await this.serviceRequestService.startRequest(
+                requestId,
+                providerId
+            );
+
+            res.status(200).json({
+                message: "Request started successfully",
+                data: updatedRequest
+            });
+        } catch (error: any) {
+            res.status(400).json({
+                error: error.message
+            });
+        }
+    }
+
     async completeRequest(req: Request, res: Response): Promise<void> {
         try {
             const { requestId } = req.params;
-            const { finalPrice } = req.body;
+            const { finalPrice, providerId } = req.body;
 
             const updatedRequest = await this.serviceRequestService.completeRequest(
                 requestId,
-                finalPrice
+                finalPrice,
+                providerId
             );
 
             res.status(200).json({
