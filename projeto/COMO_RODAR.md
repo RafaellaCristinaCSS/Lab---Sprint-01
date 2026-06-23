@@ -16,7 +16,7 @@ Edite `.env` se necessario:
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
+DATABASE_URL=postgresql://user:password@localhost:5432/home_service_db
 RABBITMQ_URL=amqp://localhost:5672
 NODE_ENV=development
 ```
@@ -178,7 +178,9 @@ npm test
 
 ### Erro `P1001: Can't reach database server`
 
-Verifique se o `DATABASE_URL` aponta para `localhost:5433` quando usar PostgreSQL do Docker.
+Se estiver usando o Postgres local instalado na sua maquina, verifique se o `DATABASE_URL` aponta para `localhost:5432`.
+
+Se estiver usando o Docker Compose deste projeto, o host mapeia para `localhost:5433`.
 
 ### Erro ao conectar no RabbitMQ
 

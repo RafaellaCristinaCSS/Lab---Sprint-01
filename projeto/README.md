@@ -113,7 +113,7 @@ Copie `.env.example` para `.env`.
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5433/home_service_db
+DATABASE_URL=postgresql://user:password@localhost:5432/home_service_db
 RABBITMQ_URL=amqp://localhost:5672
 NODE_ENV=development
 ```
