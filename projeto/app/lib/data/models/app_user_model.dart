@@ -1,5 +1,4 @@
 import '../../domain/entities/app_user.dart';
-import 'service_request_model.dart';
 
 class AppUserModel extends AppUser {
   const AppUserModel({

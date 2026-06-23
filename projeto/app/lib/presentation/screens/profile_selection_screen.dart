@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/api_config.dart';
+import '../../data/datasources/remote_api_datasource.dart';
 import '../../domain/entities/app_user.dart';
 import '../providers/app_providers.dart';
 import 'user_selection_screen.dart';
@@ -14,17 +16,50 @@ class ProfileSelectionScreen extends StatefulWidget {
 
 class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
   late final TextEditingController _baseUrlController;
+  String? _connectionMessage;
+  bool _testingConnection = false;
 
   @override
   void initState() {
     super.initState();
-    _baseUrlController = TextEditingController(text: 'http://10.0.2.2:3000');
+    final defaultUrl = ApiConfig.resolveBaseUrl(ApiConfig.defaultBaseUrl);
+    _baseUrlController = TextEditingController(text: defaultUrl);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<SessionProvider>().setBaseUrl(defaultUrl);
+      _baseUrlController.text = context.read<SessionProvider>().baseUrl;
+    });
   }
 
   @override
   void dispose() {
     _baseUrlController.dispose();
     super.dispose();
+  }
+
+  Future<void> _testConnection() async {
+    setState(() {
+      _testingConnection = true;
+      _connectionMessage = null;
+    });
+
+    final session = context.read<SessionProvider>();
+    final url = _baseUrlController.text.trim();
+    session.setBaseUrl(url);
+    final remote = RemoteApiDataSource(baseUrl: url);
+
+    try {
+      await remote.checkHealth();
+      setState(() {
+        _connectionMessage = 'Conexao OK com ${session.baseUrl}';
+      });
+    } catch (error) {
+      setState(() {
+        _connectionMessage = error.toString();
+      });
+    } finally {
+      setState(() => _testingConnection = false);
+    }
   }
 
   @override
@@ -50,13 +85,46 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
             ),
             const SizedBox(height: 24),
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'URL da API',
-                border: OutlineInputBorder(),
+                helperText: ApiConfig.platformHint,
+                border: const OutlineInputBorder(),
               ),
               controller: _baseUrlController,
-              onChanged: session.setBaseUrl,
+              onChanged: (value) {
+                final resolved = ApiConfig.resolveBaseUrl(value);
+                if (resolved != value.trim().replaceAll(RegExp(r'/+$'), '')) {
+                  _baseUrlController.value = TextEditingValue(
+                    text: resolved,
+                    selection: TextSelection.collapsed(offset: resolved.length),
+                  );
+                }
+                session.setBaseUrl(resolved);
+              },
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _testingConnection ? null : _testConnection,
+              icon: _testingConnection
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.wifi_tethering),
+              label: const Text('Testar conexao com backend'),
+            ),
+            if (_connectionMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _connectionMessage!,
+                style: TextStyle(
+                  color: _connectionMessage!.startsWith('Conexao OK')
+                      ? Colors.green.shade700
+                      : Colors.red.shade700,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             _ProfileCard(
               title: 'Cliente',

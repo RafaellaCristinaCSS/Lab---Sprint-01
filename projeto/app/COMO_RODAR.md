@@ -44,11 +44,15 @@ flutter run
 
 ### URL da API
 
-- Emulador Android: `http://10.0.2.2:3000` (padrao)
-- iOS simulator: `http://localhost:3000`
-- Dispositivo fisico: IP da maquina, ex. `http://192.168.0.10:3000`
+A URL padrao e escolhida automaticamente por plataforma:
 
-Voce pode alterar a URL na tela inicial do app.
+- **Web / Chrome / Windows / iOS simulator:** `http://localhost:3000`
+- **Emulador Android:** `http://10.0.2.2:3000`
+- **Celular fisico:** `http://IP_DA_SUA_MAQUINA:3000`
+
+Use o botao **Testar conexao com backend** na tela inicial antes de entrar no app.
+
+Se aparecer `Failed to fetch`, quase sempre e URL errada para a plataforma ou backend parado.
 
 ## Fluxos implementados
 

@@ -2,15 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/constants/api_config.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_request.dart';
 import '../../domain/repositories/repositories.dart';
 
 class SessionProvider extends ChangeNotifier {
+  SessionProvider() : _baseUrl = ApiConfig.defaultBaseUrl;
+
   AppUser? _currentUser;
   UserType? _selectedProfile;
-  String _baseUrl = 'http://10.0.2.2:3000';
+  late String _baseUrl;
 
   AppUser? get currentUser => _currentUser;
   UserType? get selectedProfile => _selectedProfile;
@@ -24,7 +27,7 @@ class SessionProvider extends ChangeNotifier {
   }
 
   void setBaseUrl(String value) {
-    _baseUrl = value.trim();
+    _baseUrl = ApiConfig.resolveBaseUrl(value);
     notifyListeners();
   }
 

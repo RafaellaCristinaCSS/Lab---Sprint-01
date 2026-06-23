@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/theme/app_theme.dart';
-import '../../data/datasources/remote_api_datasource.dart';
-import '../../data/repositories/repository_impl.dart';
-import '../../domain/entities/app_user.dart';
+import 'core/constants/api_config.dart';
+import 'core/theme/app_theme.dart';
+import 'data/datasources/remote_api_datasource.dart';
+import 'data/repositories/repository_impl.dart';
+import 'domain/entities/app_user.dart';
 import 'presentation/providers/app_providers.dart';
 import 'presentation/screens/profile_selection_screen.dart';
 
@@ -21,7 +22,7 @@ class HomeServiceApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SessionProvider()),
         ProxyProvider<SessionProvider, RemoteApiDataSource>(
-          update: (_, session, previous) =>
+          update: (_, session, __) =>
               RemoteApiDataSource(baseUrl: session.baseUrl),
         ),
         ProxyProvider<RemoteApiDataSource, UserRepositoryImpl>(
@@ -35,25 +36,23 @@ class HomeServiceApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider2<ServiceRequestRepositoryImpl,
             CategoryRepositoryImpl, ServiceRequestProvider>(
-          create: (_) => ServiceRequestProvider(
-            repository: ServiceRequestRepositoryImpl(
-              RemoteApiDataSource(),
-            ),
-            categoryRepository: CategoryRepositoryImpl(
-              RemoteApiDataSource(),
-            ),
+          create: (context) => ServiceRequestProvider(
+            repository: context.read<ServiceRequestRepositoryImpl>(),
+            categoryRepository: context.read<CategoryRepositoryImpl>(),
           ),
           update: (_, requestRepo, categoryRepo, previous) =>
+              previous ??
               ServiceRequestProvider(
-            repository: requestRepo,
-            categoryRepository: categoryRepo,
-          ),
+                repository: requestRepo,
+                categoryRepository: categoryRepo,
+              ),
         ),
         ChangeNotifierProxyProvider<UserRepositoryImpl, UserSelectionProvider>(
-          create: (_) => UserSelectionProvider(
-            UserRepositoryImpl(RemoteApiDataSource()),
+          create: (context) => UserSelectionProvider(
+            context.read<UserRepositoryImpl>(),
           ),
-          update: (_, repo, previous) => UserSelectionProvider(repo),
+          update: (_, repo, previous) =>
+              previous ?? UserSelectionProvider(repo),
         ),
       ],
       child: Consumer<SessionProvider>(

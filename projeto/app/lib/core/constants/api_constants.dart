@@ -1,5 +1,7 @@
+import 'api_config.dart';
+
 class ApiConstants {
-  static const String defaultBaseUrl = 'http://10.0.2.2:3000';
+  static String get defaultBaseUrl => ApiConfig.defaultBaseUrl;
 
   static const String usersPath = '/api/users';
   static const String categoriesPath = '/api/categories';

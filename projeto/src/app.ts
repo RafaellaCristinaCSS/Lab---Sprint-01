@@ -15,7 +15,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin) {
+            callback(null, true);
+            return;
+        }
+
+        const allowed =
+            /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+
+        callback(null, allowed || process.env.NODE_ENV === "development");
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 app.use(requestLogger);
 
@@ -39,7 +53,7 @@ app.get("/api/health", (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), "0.0.0.0", () => {
     console.log(`Server is running on port ${PORT}`);
 });
 

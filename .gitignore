@@ -14,3 +14,55 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+# =====================
+# FLUTTER
+# =====================
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/app/debug.keystore
+
+# arquivos de config local
+lib/core/constants/api_config.dart
+
+# =====================
+# DART
+# =====================
+*.iml
+*.lock
+
+# =====================
+# NODE (src/app.ts)
+# =====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+dist/
+out/
+
+# env files (se usar)
+.env
+.env.*
+
+# =====================
+# IDEs
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =====================
+# OS
+# =====================
+.DS_Store
+Thumbs.db
